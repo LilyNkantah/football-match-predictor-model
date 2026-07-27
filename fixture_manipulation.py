@@ -57,6 +57,7 @@ def extract_fixture_info_for_db(season_start_year):
     fixture_info = []  # Store all fixture info that will be inserted into database 
 
     for fixture in fixtures_file.get('response', []):
+        f_id = fixture.get('fixture', {}).get('id', {})
         s = fixture.get('league', {}).get('season', {})
         date = datetime.fromisoformat(fixture.get('fixture', {}).get('date', {}))
         ht_id = fixture.get('teams', {}).get('home', {}).get('id')
@@ -69,13 +70,45 @@ def extract_fixture_info_for_db(season_start_year):
             winner_id = at_id
         else:
             winner_id = None
-        fixture_info.append([s, date, ht_id, at_id, winner_id, hgs, ags])
+        fixture_info.append([f_id, s, date, ht_id, at_id, winner_id, hgs, ags])
     return fixture_info
 
+def extract_h2h_info_for_db(sy, ey, t1_id, t2_id, cf_date):
+    try:
+        with open(f'20{sy}_{ey}_season_h2h/fixtures_headtohead_h2h={t1_id}-{t2_id}.json') as json_file:
+            h2h_file = json.load(json_file) # Load the JSON data from the file into a Python dictionary
+    except FileNotFoundError:
+        with open(f'20{sy}_{ey}_season_h2h/fixtures_headtohead_h2h={t2_id}-{t1_id}.json') as json_file:
+            h2h_file = json.load(json_file) # Load the JSON data from the file into a Python dictionary
+
+    all_info = []  # Store all fixture info that will be inserted into database 
+
+    for h2h in h2h_file.get('response', []):
+        # only get fixtures that fit the sets i can use
+        if (h2h.get('league', {}).get('season', {}) < 2025) and (h2h.get('league', {}).get('name', {}) == "Premier League"):
+            pf_date = datetime.fromisoformat(h2h.get('fixture', {}).get('date', {})).replace(tzinfo=None)
+            s = h2h.get('league', {}).get('season', {})
+            t1_gs = h2h.get('goals', {}).get('home', {})
+            t2_gs = h2h.get('goals', {}).get('away', {})
+            if t1_gs > t2_gs:
+                winner_id = t1_id
+            elif t2_gs > t1_gs:
+                winner_id = t2_id
+            else:
+                winner_id = None
+            all_info.append([pf_date, t1_id, t2_id, s, winner_id, t1_gs, t2_gs])
+
+    all_info = sorted(all_info, key=lambda x: x[0]) # sort by date (oldest to newest)
+    # list comp and slicing to get most recent 5 past games
+    h2h_info = [inf for inf in all_info if inf[0] < cf_date]
+    h2h_info = h2h_info[-5:]
+
+    return h2h_info    
 
 
 if __name__ == "__main__":
     # extract_unique_team_pairs()
     # extract_seasonal_team_goal_stats()
     # extract_recent_team_form_stats()
-    extract_fixture_info_for_db(2022)
+    #extract_fixture_info_for_db(2022)
+    extract_h2h_info_for_db(24, 25, 33, 34, datetime.fromisoformat("2024-12-30T20:00:00+00:00"))

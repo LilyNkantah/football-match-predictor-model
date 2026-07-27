@@ -46,7 +46,7 @@ class SeasonPlayed(Base):
 # FIXTURES
 class Fixture(Base):
     __tablename__ = "fixtures"
-    id = Column(Integer, primary_key=True, index=True)
+    fixture_id = Column(Integer, primary_key=True, index=True)
     season_id = Column(Integer, sqlalchemy.ForeignKey("seasons.id"))
     date = Column(DateTime, index=True)
     home_team_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"))
@@ -59,7 +59,7 @@ class Fixture(Base):
 class HeadToHead(Base):
     __tablename__ = "head_to_heads"
     id = Column(Integer, primary_key=True, index=True)
-    current_fixture_id = Column(Integer, sqlalchemy.ForeignKey("fixtures.id"))
+    current_fixture_id = Column(Integer, sqlalchemy.ForeignKey("fixtures.fixture_id"))
     past_fixture_date = Column(DateTime, index=True)
     team1_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"))
     team2_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"))
@@ -104,6 +104,7 @@ class SeasonPlayedResponse(SeasonPlayedCreate):
 
 # FIXTURES
 class FixtureCreate(BaseModel):
+    fixture_id: int
     season_id: int
     date: datetime
     home_team_id: int
@@ -113,7 +114,7 @@ class FixtureCreate(BaseModel):
     away_goals_scored: int | None = None
 
 class FixtureResponse(FixtureCreate):
-    id: int
+    fixture_id: int
     season_id: int
     date: datetime
     home_team_id: int
@@ -219,19 +220,48 @@ def add_fixtures_to_db(db):
     for inf in infos:
         for fix in inf:
             # query into season table to get s_id for each season
-            if not db.query(Season).filter(Season.start_year == fix[0]).first() is None:
-                s_id = (db.query(Season).filter(Season.start_year == fix[0]).first()).id
-                if db.query(Fixture).filter(Fixture.date == fix[1], Fixture.home_team_id == fix[2], Fixture.away_team_id == fix[3]).first() is None:
-                    db_fixture = Fixture(season_id=s_id, date=fix[1], home_team_id=fix[2], 
-                                        away_team_id=fix[3], winner_team_id=fix[4], 
-                                        home_goals_scored=fix[5], away_goals_scored=fix[6])
+            if not db.query(Season).filter(Season.start_year == fix[1]).first() is None:
+                s_id = (db.query(Season).filter(Season.start_year == fix[1]).first()).id
+                if db.query(Fixture).filter(Fixture.date == fix[2], Fixture.home_team_id == fix[3], Fixture.away_team_id == fix[4]).first() is None:
+                    db_fixture = Fixture(fixture_id=fix[0], season_id=s_id, date=fix[2], home_team_id=fix[3], 
+                                        away_team_id=fix[4], winner_team_id=fix[5], 
+                                        home_goals_scored=fix[6], away_goals_scored=fix[7])
                     db.add(db_fixture)
                     db.commit()
                     db.refresh(db_fixture)
                 else:
                     print("Fixture already exists in database.")
         print("Fixtures for season added to database successfully.")
-                
+
+def add_h2hs_to_db(db):
+    # get list of all fixtures from fixture table
+    fixtures = db.query(Fixture).all()
+    
+    for fixture in fixtures:
+        current_f_id = fixture.fixture_id
+        # calculate which season the fixture belongs to
+        dy = (fixture.date.year) % 100
+        dm = fixture.date.month
+        if dm < 7:
+            start_year = dy - 1
+            end_year = dy
+        else:
+            start_year = dy
+            end_year = dy + 1
+
+        h2h_info = fixture_manipulation.extract_h2h_info_for_db(start_year, end_year, fixture.home_team_id, fixture.away_team_id, fixture.date)
+
+        # input data into h2h table
+        for h2h in h2h_info:
+            if db.query(HeadToHead).filter(HeadToHead.past_fixture_date == h2h[0]).first() is None:
+                db_h2h = HeadToHead(current_fixture_id=current_f_id, past_fixture_date=h2h[0], team1_id=h2h[1], team2_id=h2h[2], season_id=h2h[3], winner_team_id=h2h[4], team1_goals_scored=h2h[5], team2_goals_scored=h2h[6])
+                db.add(db_h2h)
+                db.commit()
+                db.refresh(db_h2h)
+            else:
+                print("H2H for this matchup already exists in database.")
+        print("H2Hs added to database successfully.")
+        
 
 # Run the FastAPI application using Uvicorn if the script is executed directly
 if __name__ == "__main__":
@@ -241,9 +271,10 @@ if __name__ == "__main__":
     # Define dependency to get a database session - gives db session to be used and ensures it is closed after use.
     db = SessionLocal()
     try:
-        add_teams_to_db(db)
-        add_seasons_to_db(db)
-        add_seasons_played_to_db(db)
-        add_fixtures_to_db(db)
+        #add_teams_to_db(db)
+        #add_seasons_to_db(db)
+        #add_seasons_played_to_db(db)
+        #add_fixtures_to_db(db)
+        add_h2hs_to_db(db)
     finally:
         db.close()
