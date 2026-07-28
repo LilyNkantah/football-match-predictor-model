@@ -105,10 +105,17 @@ def extract_h2h_info_for_db(sy, ey, t1_id, t2_id, cf_date):
 
     return h2h_info    
 
+def calculate_form_score(fixs, tid):
+    # do a check if length < 5 just return None
+    pass
 
-if __name__ == "__main__":
+def calculate_h2h_score(h2hs, t1id, t2id):
+    # do a check if length < 5 just return None
+    pass
+
+#if __name__ == "__main__":
     # extract_unique_team_pairs()
     # extract_seasonal_team_goal_stats()
     # extract_recent_team_form_stats()
     #extract_fixture_info_for_db(2022)
-    extract_h2h_info_for_db(24, 25, 33, 34, datetime.fromisoformat("2024-12-30T20:00:00+00:00"))
+    #extract_h2h_info_for_db(24, 25, 33, 34, datetime.fromisoformat("2024-12-30T20:00:00+00:00"))
