@@ -249,7 +249,12 @@ def get_last_5_fixtures(db, tid, fdate):
 
 # for use in calculating h2h score
 def get_last_5_h2hs(db, t1id, t2id, fdate):
-    pass
+    h2hs = db.query(HeadToHead).filter(HeadToHead.past_fixture_date < fdate, 
+                                       sqlalchemy.and_(HeadToHead.team1_id == t1id, 
+                                                       HeadToHead.team2_id == t2id)
+                                                       ).order_by(HeadToHead.past_fixture_date).all()
+    h2hs = h2hs[-5:]
+    return h2hs
 
 # Run the FastAPI application using Uvicorn if the script is executed directly
 if __name__ == "__main__":

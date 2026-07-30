@@ -106,12 +106,32 @@ def extract_h2h_info_for_db(sy, ey, t1_id, t2_id, cf_date):
     return h2h_info    
 
 def calculate_form_score(fixs, tid):
-    # do a check if length < 5 just return None
-    pass
+    if len(fixs) < 5:
+        return None
+    
+    points = 0
+    for fix in fixs:
+        if fix.winner_team_id == tid:
+            points += 3
+        elif fix.winner_team_id is None:
+            points += 1
 
-def calculate_h2h_score(h2hs, t1id, t2id):
-    # do a check if length < 5 just return None
-    pass
+    form_score = points / 15
+    return form_score
+
+def calculate_h2h_score(h2hs, tid):
+    if len(h2hs) < 5:
+        return None
+
+    points = 0
+    for h2h in h2hs:
+        if h2h.winner_team_id == tid:
+            points += 3
+        elif h2h.winner_team_id is None:
+            points += 1
+
+    h2h_score = points / 15
+    return h2h_score
 
 #if __name__ == "__main__":
     # extract_unique_team_pairs()
