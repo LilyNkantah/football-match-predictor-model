@@ -250,20 +250,3 @@ def get_last_5_h2hs(db, t1id, t2id, fdate):
                                                        ).order_by(HeadToHead.past_fixture_date).all()
     h2hs = h2hs[-5:]
     return h2hs
-
-# Run the FastAPI application using Uvicorn if the script is executed directly
-if __name__ == "__main__":
-    #import uvicorn
-    #uvicorn.run(app, host="127.0.0.1", port=8000)
-
-    # Define dependency to get a database session - gives db session to be used and ensures it is closed after use.
-    # db = SessionLocal()
-    # try:
-    #     #add_teams_to_db(db)
-    #     #add_seasons_to_db(db)
-    #     #add_seasons_played_to_db(db)
-    #     #add_fixtures_to_db(db)
-    #     #add_h2hs_to_db(db)
-    # finally:
-    #     db.close()
-    pass

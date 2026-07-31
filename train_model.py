@@ -27,7 +27,7 @@ Base = sqlalchemy.orm.declarative_base()
 
 def build_model(X_train, y_train, X_test, y_test):
     # use the split data to train Random Forest model
-    rf_classifier = RandomForestClassifier(n_estimators=100, random_state=None)
+    rf_classifier = RandomForestClassifier(n_estimators=99, random_state=None)
     rf_classifier.fit(X_train, y_train)
 
     # predict on test data
@@ -37,7 +37,7 @@ def build_model(X_train, y_train, X_test, y_test):
     accuracy = accuracy_score(y_test, y_pred)
     classification_rep = classification_report(y_test, y_pred)
 
-    print(f"Accuracy: {accuracy:.2f}")
+    print(f"Accuracy: {accuracy:.2f}") 
     print("\nClassification Report:\n", classification_rep)
 
     return y_pred
@@ -68,4 +68,3 @@ if __name__ == "__main__":
     fold1_pred = build_model(X1, y1, X2, y2)
 
     fold2_pred = build_model(X1_2, y1_2, X3, y3)
-
