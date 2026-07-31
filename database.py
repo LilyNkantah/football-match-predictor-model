@@ -1,8 +1,3 @@
-# Import necessary libraries for:
-#   building a FastAPI application, 
-#   interacting with a database using SQLAlchemy, 
-#   and defining data models with Pydantic.
-
 from datetime import datetime
 
 from fastapi import FastAPI, Depends, HTTPException
