@@ -105,10 +105,62 @@ def extract_h2h_info_for_db(sy, ey, t1_id, t2_id, cf_date):
 
     return h2h_info    
 
+def calculate_form_score(fixs, tid):
+    if len(fixs) < 5:
+        return None
+    
+    points = 0
+    for fix in fixs:
+        if fix.winner_team_id == tid:
+            points += 3
+        elif fix.winner_team_id is None:
+            points += 1
 
-if __name__ == "__main__":
-    # extract_unique_team_pairs()
-    # extract_seasonal_team_goal_stats()
-    # extract_recent_team_form_stats()
-    #extract_fixture_info_for_db(2022)
-    extract_h2h_info_for_db(24, 25, 33, 34, datetime.fromisoformat("2024-12-30T20:00:00+00:00"))
+    form_score = points / 15
+    return form_score
+
+def calculate_h2h_score(h2hs, tid):
+    if len(h2hs) < 5:
+        return None
+
+    points = 0
+    for h2h in h2hs:
+        if h2h.winner_team_id == tid:
+            points += 3
+        elif h2h.winner_team_id is None:
+            points += 1
+
+    h2h_score = points / 15
+    return h2h_score
+
+def calculate_goals_for_form(fixs, tid):
+    hgs = 0
+    hgc = 0
+    ags = 0
+    agc = 0
+    
+    for fix in fixs:
+        if (fix.home_team_id == tid):
+            hgs += fix.home_goals_scored
+            hgc += fix.away_goals_scored
+        elif (fix.away_team_id == tid):
+            ags += fix.away_goals_scored
+            agc += fix.home_goals_scored
+    
+    return [hgs, hgc, ags, agc]
+
+def calculate_goals_for_h2h(h2hs, tid):
+    hgs = 0
+    hgc = 0
+    ags = 0
+    agc = 0
+    
+    for h2h in h2hs:
+        if (h2h.team1_id == tid):
+            hgs += h2h.team1_goals_scored
+            hgc += h2h.team2_goals_scored
+        elif (h2h.team2_id == tid):
+            ags += h2h.team2_goals_scored
+            agc += h2h.team1_goals_scored
+    
+    return [hgs, hgc, ags, agc]

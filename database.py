@@ -1,8 +1,3 @@
-# Import necessary libraries for:
-#   building a FastAPI application, 
-#   interacting with a database using SQLAlchemy, 
-#   and defining data models with Pydantic.
-
 from datetime import datetime
 
 from fastapi import FastAPI, Depends, HTTPException
@@ -15,7 +10,7 @@ import db_dictionaries
 import fixture_manipulation
 
 # Create a FastAPI application instance and configure the database connection using SQLAlchemy.
-app = FastAPI()
+#app = FastAPI()
 DATABASE_URL = "sqlite:///./football_predictor.db"  # SQLite database URL for local development
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -145,35 +140,7 @@ class HeadToHeadResponse(HeadToHeadCreate):
     team1_goals_scored: int | None = None
     team2_goals_scored: int | None = None
 
-
-# # Define API endpoint to create a new team in the database
-# @app.post("/teams/", response_model=TeamResponse)
-# async def create_team(team: TeamCreate, db: Session = Depends(get_db)):
-#     db_team = Team(**team.model_dump())  # Create a new Team instance from the request data
-#     db.add(db_team)  # Add the new team to the database session
-#     db.commit()  # Commit the changes to the database
-#     db.refresh(db_team)  # Refresh the instance with the committed changes
-#     return db_team  # Return the created team
-
-# # Define API endpoint to read a Team by ID from the database
-# @app.get("/teams/{team_id}", response_model=TeamResponse)
-# async def read_team(team_id: int, db: Session = Depends(get_db)):
-#     db_team = db.query(Team).filter(Team.team_id == team_id).first()  # Query the database for the team by ID
-#     if db_team is None:
-#         raise HTTPException(status_code=404, detail="Team not found")
-#     return db_team
-
-
-# # Define API endpoint to delete a Team by ID from the database
-# @app.delete("/teams/{team_id}", response_model=TeamResponse)
-# async def delete_team(team_id: int, db: Session = Depends(get_db)):
-#     db_team = db.query(Team).filter(Team.team_id == team_id).first()
-#     if db_team is None:
-#         raise HTTPException(status_code=404, detail="Team not found")
-#     db.delete(db_team)
-#     db.commit()
-#     return db_team
-
+# INSERTING HISTORICAL DATA INTO THE TABLES
 def add_teams_to_db(db):
     for t_id, t_name in db_dictionaries.teams.items():
         if db.query(Team).filter(Team.team_id == t_id).first() is None:
@@ -249,32 +216,37 @@ def add_h2hs_to_db(db):
             start_year = dy
             end_year = dy + 1
 
-        h2h_info = fixture_manipulation.extract_h2h_info_for_db(start_year, end_year, fixture.home_team_id, fixture.away_team_id, fixture.date)
+        h2h_info = fixture_manipulation.extract_h2h_info_for_db(start_year, end_year, fixture.home_team_id, 
+                                                                fixture.away_team_id, fixture.date)
 
         # input data into h2h table
         for h2h in h2h_info:
             if db.query(HeadToHead).filter(HeadToHead.past_fixture_date == h2h[0]).first() is None:
-                db_h2h = HeadToHead(current_fixture_id=current_f_id, past_fixture_date=h2h[0], team1_id=h2h[1], team2_id=h2h[2], season_id=h2h[3], winner_team_id=h2h[4], team1_goals_scored=h2h[5], team2_goals_scored=h2h[6])
+                db_h2h = HeadToHead(current_fixture_id=current_f_id, past_fixture_date=h2h[0], 
+                                    team1_id=h2h[1], team2_id=h2h[2], season_id=h2h[3], winner_team_id=h2h[4], 
+                                    team1_goals_scored=h2h[5], team2_goals_scored=h2h[6])
                 db.add(db_h2h)
                 db.commit()
                 db.refresh(db_h2h)
             else:
                 print("H2H for this matchup already exists in database.")
         print("H2Hs added to database successfully.")
-        
 
-# Run the FastAPI application using Uvicorn if the script is executed directly
-if __name__ == "__main__":
-    #import uvicorn
-    #uvicorn.run(app, host="127.0.0.1", port=8000)
+# QUERIES    
+# for use in calculating recent form score
+def get_last_5_fixtures(db, tid, fdate):
+    fixtures = db.query(Fixture).filter(Fixture.date < fdate, 
+                                        sqlalchemy.or_(Fixture.home_team_id == tid, 
+                                        Fixture.away_team_id == tid)
+                                        ).order_by(Fixture.date).all()
+    fixtures = fixtures[-5:]
+    return fixtures
 
-    # Define dependency to get a database session - gives db session to be used and ensures it is closed after use.
-    db = SessionLocal()
-    try:
-        #add_teams_to_db(db)
-        #add_seasons_to_db(db)
-        #add_seasons_played_to_db(db)
-        #add_fixtures_to_db(db)
-        add_h2hs_to_db(db)
-    finally:
-        db.close()
+# for use in calculating h2h score
+def get_last_5_h2hs(db, t1id, t2id, fdate):
+    h2hs = db.query(HeadToHead).filter(HeadToHead.past_fixture_date < fdate, 
+                                       sqlalchemy.and_(HeadToHead.team1_id == t1id, 
+                                                       HeadToHead.team2_id == t2id)
+                                                       ).order_by(HeadToHead.past_fixture_date).all()
+    h2hs = h2hs[-5:]
+    return h2hs
