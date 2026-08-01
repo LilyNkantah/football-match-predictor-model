@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import DateTime, create_engine, Column, Integer, String
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, Session
