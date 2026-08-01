@@ -119,6 +119,9 @@ This isn't a highly accurate model, but given the constraints of the project —
 
 The model struggles most with predicting draws, a common pattern in football prediction — draws lack a clear signal in the way a stronger team winning does, making them inherently harder to model.
 
+### Performance on Folds 1 & 2 (Respectively)
+<img width="497" height="555" alt="Screenshot 2026-07-31 132843" src="https://github.com/user-attachments/assets/d0ce84b4-85c9-48be-b021-a7f58a397cda" />
+
 ---
 
 ## Known Limitations & Future Improvements
