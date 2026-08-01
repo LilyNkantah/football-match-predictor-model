@@ -2,7 +2,7 @@
 
 Premier League match outcome predictor combining an automated data pipeline, engineered features, a Random Forest classification model, and an LLM-powered explanation layer.
 
->  Frontend and full LLM integration are still in progress — this README will be updated as those land.
+>  Frontend and full LLM integration are still in progress — README will be updated accordingly.
 
 ---
 
