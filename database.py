@@ -8,8 +8,6 @@ from pydantic import BaseModel
 import db_dictionaries
 import fixture_manipulation
 
-# Create a FastAPI application instance and configure the database connection using SQLAlchemy.
-#app = FastAPI()
 DATABASE_URL = "sqlite:///./football_predictor.db"  # SQLite database URL for local development
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

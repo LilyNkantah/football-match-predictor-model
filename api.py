@@ -19,10 +19,9 @@ Base = sqlalchemy.orm.declarative_base()
 
 # CORS (Cross-Origin Resource Sharing) settings to prevent errors when the frontend and backend are on different origins
 origins = [
-    "http://tiangolo.com",
-    "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:5500",
 ]
 
 app.add_middleware(
@@ -46,11 +45,13 @@ class FixtureListItem(BaseModel):
     away_team_name: str
     actual_result: int
     predicted_result: int | None = None
+    season_fixture_count: int | None = None
 
 # Define API endpoint to get fixtures for a specific season and page number
 @app.get("/fixtures/", response_model=List[FixtureListItem])
 async def get_fixtures(season_id: int, page_number: int, db: Session = Depends(get_db)):
     fixtures = db.query(Fixture).filter(Fixture.season_id == season_id).offset((page_number - 1) * 10).limit(10).all()
+    season_fixture_count = db.query(Fixture).filter(Fixture.season_id == season_id).count()
     fixture_data = []
     for fixture in fixtures:
         home_team = db.query(Team).filter(Team.team_id == fixture.home_team_id).first()
@@ -70,7 +71,8 @@ async def get_fixtures(season_id: int, page_number: int, db: Session = Depends(g
             "home_team_name": home_team.team_name if home_team else None,
             "away_team_name": away_team.team_name if away_team else None,
             "actual_result": actual_result,
-            "predicted_result": predicted_result
+            "predicted_result": predicted_result,
+            "season_fixture_count": season_fixture_count
         })
     return fixture_data
 
