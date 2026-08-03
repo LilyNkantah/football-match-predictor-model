@@ -313,14 +313,14 @@ def add_h2hs_to_db(db):
 def add_predictions_to_db(db, predictions):
     for pred in predictions:
         if db.query(Prediction).filter(Prediction.fixture_id == pred[0]).first() is None:
-            db_pred = Prediction(fixture_id=pred[0], predicted_result=pred[1], 
-                                 home_form=pred[2], away_form=pred[3], home_h2h_score=pred[4], 
-                                 away_h2h_score=pred[5], t1_home_form_gs=pred[6], t1_home_form_gc=pred[7],
-                                 t1_away_form_gs=pred[8], t1_away_form_gc=pred[9], t2_home_form_gs=pred[10],
-                                 t2_home_form_gc=pred[11], t2_away_form_gs=pred[12], t2_away_form_gc=pred[13],
-                                 t1_home_h2h_gs=pred[14], t1_home_h2h_gc=pred[15], t1_away_h2h_gs=pred[16],
-                                 t1_away_h2h_gc=pred[17], t2_home_h2h_gs=pred[18], t2_home_h2h_gc=pred[19],
-                                 t2_away_h2h_gs=pred[20], t2_away_h2h_gc=pred[21])
+            db_pred = db_pred = Prediction(fixture_id=pred[0], predicted_result=pred[21], home_form=pred[1], away_form=pred[2],
+                                           home_h2h_score=pred[3], away_h2h_score=pred[4], t1_home_form_gs=pred[5],
+                                           t1_home_form_gc=pred[6], t1_away_form_gs=pred[7], t1_away_form_gc=pred[8], 
+                                           t2_home_form_gs=pred[9], t2_home_form_gc=pred[10], t2_away_form_gs=pred[11],
+                                           t2_away_form_gc=pred[12], t1_home_h2h_gs=pred[13], t1_home_h2h_gc=pred[14],
+                                           t1_away_h2h_gs=pred[15], t1_away_h2h_gc=pred[16], t2_home_h2h_gs=pred[17],
+                                           t2_home_h2h_gc=pred[18], t2_away_h2h_gs=pred[19], t2_away_h2h_gc=pred[20],
+                                           llm_explanation=None)
             db.add(db_pred)
             db.commit()
             db.refresh(db_pred)
