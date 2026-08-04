@@ -47,15 +47,6 @@ class FixtureListItem(BaseModel):
     predicted_result: int | None = None
     season_fixture_count: int | None = None
 
-# class FixtureStatItem(BaseModel):
-#     fixture_id: int
-#     home_team_name: str
-#     away_team_name: str
-#     home_team_form: int
-#     away_team_form: int
-#     home_team_h2h_form: int
-#     away_team_h2h_form: int
-
 # Define API endpoint to get fixtures for a specific season and page number
 @app.get("/fixtures/", response_model=List[FixtureListItem])
 async def get_fixtures(season_id: int, page_number: int, db: Session = Depends(get_db)):
