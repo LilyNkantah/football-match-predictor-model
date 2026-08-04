@@ -19,10 +19,9 @@ Base = sqlalchemy.orm.declarative_base()
 
 # CORS (Cross-Origin Resource Sharing) settings to prevent errors when the frontend and backend are on different origins
 origins = [
-    "http://tiangolo.com",
-    "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:5500",
 ]
 
 app.add_middleware(
@@ -46,17 +45,28 @@ class FixtureListItem(BaseModel):
     away_team_name: str
     actual_result: int
     predicted_result: int | None = None
+    season_fixture_count: int | None = None
+
+# class FixtureStatItem(BaseModel):
+#     fixture_id: int
+#     home_team_name: str
+#     away_team_name: str
+#     home_team_form: int
+#     away_team_form: int
+#     home_team_h2h_form: int
+#     away_team_h2h_form: int
 
 # Define API endpoint to get fixtures for a specific season and page number
 @app.get("/fixtures/", response_model=List[FixtureListItem])
 async def get_fixtures(season_id: int, page_number: int, db: Session = Depends(get_db)):
     fixtures = db.query(Fixture).filter(Fixture.season_id == season_id).offset((page_number - 1) * 10).limit(10).all()
+    season_fixture_count = db.query(Fixture).filter(Fixture.season_id == season_id).count()
     fixture_data = []
     for fixture in fixtures:
         home_team = db.query(Team).filter(Team.team_id == fixture.home_team_id).first()
         away_team = db.query(Team).filter(Team.team_id == fixture.away_team_id).first()
         prediction = db.query(Prediction).filter(Prediction.fixture_id == fixture.fixture_id).first()
-        predicted_result = prediction.predicted_result if prediction else None
+        predicted_result = prediction.predicted_result
 
         if fixture.winner_team_id == home_team.team_id:
             actual_result = 1
@@ -70,9 +80,48 @@ async def get_fixtures(season_id: int, page_number: int, db: Session = Depends(g
             "home_team_name": home_team.team_name if home_team else None,
             "away_team_name": away_team.team_name if away_team else None,
             "actual_result": actual_result,
-            "predicted_result": predicted_result
+            "predicted_result": predicted_result,
+            "season_fixture_count": season_fixture_count
         })
     return fixture_data
+
+# Define API endpoint to get fixture stat details for llm explanation
+@app.get("/explain/{fixture_id}", response_model=PredictionResponse)
+async def explain(fixture_id: int, db: Session = Depends(get_db)):
+    # check if fixture exists
+    fixture = db.query(Fixture).filter(Fixture.fixture_id == fixture_id).first()
+    if not fixture:
+        raise HTTPException(status_code=404, detail="Fixture not found")
+    # check if prediction exists for the fixture
+    prediction = db.query(Prediction).filter(Prediction.fixture_id == fixture_id).first()
+    if not prediction:
+        raise HTTPException(status_code=404, detail="Prediction not found")
+
+    fixture_stats = {
+        "fixture_id": fixture_id,
+        "predicted_result": prediction.predicted_result,
+        "home_form": prediction.home_form,
+        "away_form": prediction.away_form,
+        "home_h2h_score": prediction.home_h2h_score,
+        "away_h2h_score": prediction.away_h2h_score,
+        "t1_home_form_gs": prediction.t1_home_form_gs,
+        "t1_home_form_gc": prediction.t1_home_form_gc,
+        "t1_away_form_gs": prediction.t1_away_form_gs,
+        "t1_away_form_gc": prediction.t1_away_form_gc,
+        "t2_home_form_gs": prediction.t2_home_form_gs,
+        "t2_home_form_gc": prediction.t2_home_form_gc,
+        "t2_away_form_gs": prediction.t2_away_form_gs,
+        "t2_away_form_gc": prediction.t2_away_form_gc,
+        "t1_home_h2h_gs": prediction.t1_home_h2h_gs,
+        "t1_away_h2h_gc": prediction.t1_away_h2h_gc,
+        "t2_home_h2h_gs": prediction.t2_home_h2h_gs,
+        "t2_home_h2h_gc": prediction.t2_home_h2h_gc,
+        "t2_away_h2h_gs": prediction.t2_away_h2h_gs,
+        "t2_away_h2h_gc": prediction.t2_away_h2h_gc,
+        "llm_explanation": prediction.llm_explanation if prediction.llm_explanation else None
+    }
+
+    return fixture_stats
 
 # Run the FastAPI application using Uvicorn if the script is executed directly
 if __name__ == "__main__":

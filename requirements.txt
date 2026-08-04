@@ -8,3 +8,5 @@ numpy
 python-dotenv
 sklearn
 warnings
+typing
+anthropic
