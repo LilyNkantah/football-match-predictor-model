@@ -4,9 +4,11 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env file
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) 
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
 
 def explain_prediction(prediction, htn, atn):
+    """Generate a short natural-language explanation of a prediction's result from its stored feature values, using Claude."""
     if prediction.predicted_result == 1:
         predicted_result = "Home team win"
     elif prediction.predicted_result == 2:
@@ -31,6 +33,6 @@ def explain_prediction(prediction, htn, atn):
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=200,
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role": "user", "content": prompt}],
     )
     return response.content[0].text
