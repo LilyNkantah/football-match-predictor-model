@@ -2,18 +2,21 @@ from datetime import datetime
 
 from sqlalchemy import DateTime, Float, create_engine, Column, Integer, String
 import sqlalchemy
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
 
 import db_dictionaries
 import fixture_manipulation
 
-DATABASE_URL = "sqlite:///./football_predictor.db"  # SQLite database URL for local development
+DATABASE_URL = (
+    "sqlite:///./football_predictor.db"  # SQLite database URL for local development
+)
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = sqlalchemy.orm.declarative_base()
 
 # Define the database model
+
 
 # TEAMS
 class Team(Base):
@@ -22,6 +25,7 @@ class Team(Base):
     team_id = Column(Integer, unique=True, index=True)
     team_name = Column(String, index=True)
 
+
 # SEASONS
 class Season(Base):
     __tablename__ = "seasons"
@@ -29,11 +33,13 @@ class Season(Base):
     start_year = Column(Integer, index=True)
     end_year = Column(Integer, index=True)
 
+
 # SEASONS PLAYED
 class SeasonPlayed(Base):
     __tablename__ = "seasons_played"
     team_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"), primary_key=True)
     season_id = Column(Integer, sqlalchemy.ForeignKey("seasons.id"), primary_key=True)
+
 
 # FIXTURES
 class Fixture(Base):
@@ -43,9 +49,16 @@ class Fixture(Base):
     date = Column(DateTime, index=True)
     home_team_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"))
     away_team_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"))
-    winner_team_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"), nullable=True)  # Nullable to allow for draws or unplayed matches
-    home_goals_scored = Column(Integer, nullable=True)  # Nullable to allow for unplayed matches
-    away_goals_scored = Column(Integer, nullable=True)  # Nullable to allow for unplayed matches
+    winner_team_id = Column(
+        Integer, sqlalchemy.ForeignKey("teams.team_id"), nullable=True
+    )  # Nullable to allow for draws or unplayed matches
+    home_goals_scored = Column(
+        Integer, nullable=True
+    )  # Nullable to allow for unplayed matches
+    away_goals_scored = Column(
+        Integer, nullable=True
+    )  # Nullable to allow for unplayed matches
+
 
 # HEAD TO HEADS
 class HeadToHead(Base):
@@ -56,16 +69,21 @@ class HeadToHead(Base):
     team1_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"))
     team2_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"))
     season_id = Column(Integer, sqlalchemy.ForeignKey("seasons.id"))
-    winner_team_id = Column(Integer, sqlalchemy.ForeignKey("teams.team_id"), nullable=True) 
-    team1_goals_scored = Column(Integer, nullable=True) 
+    winner_team_id = Column(
+        Integer, sqlalchemy.ForeignKey("teams.team_id"), nullable=True
+    )
+    team1_goals_scored = Column(Integer, nullable=True)
     team2_goals_scored = Column(Integer, nullable=True)
+
 
 # PREDICTIONS
 class Prediction(Base):
     __tablename__ = "predictions"
-    fixture_id = Column(Integer, sqlalchemy.ForeignKey("fixtures.fixture_id"), primary_key=True)
-    predicted_result = Column(Integer, nullable=True) 
-    home_form = Column(Float, nullable=True) 
+    fixture_id = Column(
+        Integer, sqlalchemy.ForeignKey("fixtures.fixture_id"), primary_key=True
+    )
+    predicted_result = Column(Integer, nullable=True)
+    home_form = Column(Float, nullable=True)
     away_form = Column(Float, nullable=True)
     home_h2h_score = Column(Float, nullable=True)
     away_h2h_score = Column(Float, nullable=True)
@@ -85,41 +103,51 @@ class Prediction(Base):
     t2_home_h2h_gc = Column(Integer, nullable=True)
     t2_away_h2h_gs = Column(Integer, nullable=True)
     t2_away_h2h_gc = Column(Integer, nullable=True)
-    llm_explanation = Column(String, nullable=True)  # Nullable to allow for cases where explanation is not yet generated
+    llm_explanation = Column(
+        String, nullable=True
+    )  # Nullable to allow for cases where explanation is not yet generated
+
 
 # Create the database tables
 Base.metadata.create_all(bind=engine)
 
 # Define Pydantic models for request and response data validation
 
+
 # TEAMS
 class TeamCreate(BaseModel):
     team_id: int
     team_name: str
+
 
 class TeamResponse(TeamCreate):
     id: int
     team_id: int
     team_name: str
 
+
 # SEASONS
 class SeasonCreate(BaseModel):
     start_year: int
     end_year: int
+
 
 class SeasonResponse(SeasonCreate):
     id: int
     start_year: int
     end_year: int
 
+
 # SEASONS PLAYED
 class SeasonPlayedCreate(BaseModel):
     team_id: int
     season_id: int
 
+
 class SeasonPlayedResponse(SeasonPlayedCreate):
     team_id: int
     season_id: int
+
 
 # FIXTURES
 class FixtureCreate(BaseModel):
@@ -128,9 +156,12 @@ class FixtureCreate(BaseModel):
     date: datetime
     home_team_id: int
     away_team_id: int
-    winner_team_id: int | None = None  # Optional field to allow for draws or unplayed matches
+    winner_team_id: int | None = (
+        None  # Optional field to allow for draws or unplayed matches
+    )
     home_goals_scored: int | None = None  # Optional field to allow for unplayed matches
     away_goals_scored: int | None = None
+
 
 class FixtureResponse(FixtureCreate):
     fixture_id: int
@@ -141,6 +172,7 @@ class FixtureResponse(FixtureCreate):
     winner_team_id: int | None = None
     home_goals_scored: int | None = None
     away_goals_scored: int | None = None
+
 
 # HEAD TO HEADS
 class HeadToHeadCreate(BaseModel):
@@ -153,6 +185,7 @@ class HeadToHeadCreate(BaseModel):
     team1_goals_scored: int | None = None
     team2_goals_scored: int | None = None
 
+
 class HeadToHeadResponse(HeadToHeadCreate):
     id: int
     current_fixture_id: int
@@ -163,6 +196,7 @@ class HeadToHeadResponse(HeadToHeadCreate):
     winner_team_id: int | None = None
     team1_goals_scored: int | None = None
     team2_goals_scored: int | None = None
+
 
 # PREDICTIONS
 class PredictionCreate(BaseModel):
@@ -188,7 +222,8 @@ class PredictionCreate(BaseModel):
     t2_home_h2h_gc: int | None = None
     t2_away_h2h_gs: int | None = None
     t2_away_h2h_gc: int | None = None
-    llm_explanation: str | None = None 
+    llm_explanation: str | None = None
+
 
 class PredictionResponse(PredictionCreate):
     fixture_id: int
@@ -213,10 +248,14 @@ class PredictionResponse(PredictionCreate):
     t2_home_h2h_gc: int | None = None
     t2_away_h2h_gs: int | None = None
     t2_away_h2h_gc: int | None = None
-    llm_explanation: str | None = None 
+    llm_explanation: str | None = None
+
 
 # INSERTING HISTORICAL DATA INTO THE TABLES
+
+
 def add_teams_to_db(db):
+    """Insert each team from db_dictionaries into the Teams table, skipping any that already exist."""
     for t_id, t_name in db_dictionaries.teams.items():
         if db.query(Team).filter(Team.team_id == t_id).first() is None:
             db_team = Team(team_id=t_id, team_name=t_name)
@@ -227,7 +266,9 @@ def add_teams_to_db(db):
             print("Team already exists in database.")
     print("Teams added to database successfully.")
 
+
 def add_seasons_to_db(db):
+    """Insert each season from db_dictionaries into the Seasons table, skipping any that already exist."""
     for s_year, e_year in db_dictionaries.seasons.values():
         if db.query(Season).filter(Season.start_year == s_year).first() is None:
             db_season = Season(start_year=s_year, end_year=e_year)
@@ -238,14 +279,26 @@ def add_seasons_to_db(db):
             print("Season already exists in database.")
     print("Seasons added to database successfully.")
 
+
 def add_seasons_played_to_db(db):
+    """Insert each team-season pairing from db_dictionaries into the SeasonsPlayed table, skipping any that already exist."""
     for t_id, s_list in db_dictionaries.seasons_played.items():
         for s in s_list:
             db_season_played = db.query(Season).filter(Season.start_year == s).first()
-            if not db_season_played is None: 
+            if not db_season_played is None:
                 db_season_played_id = db_season_played.id
-                if db.query(SeasonPlayed).filter(SeasonPlayed.team_id == t_id, SeasonPlayed.season_id == db_season_played_id).first() is None:
-                    db_team_played = SeasonPlayed(team_id=t_id, season_id=db_season_played_id)
+                if (
+                    db.query(SeasonPlayed)
+                    .filter(
+                        SeasonPlayed.team_id == t_id,
+                        SeasonPlayed.season_id == db_season_played_id,
+                    )
+                    .first()
+                    is None
+                ):
+                    db_team_played = SeasonPlayed(
+                        team_id=t_id, season_id=db_season_played_id
+                    )
                     db.add(db_team_played)
                     db.commit()
                     db.refresh(db_team_played)
@@ -253,7 +306,9 @@ def add_seasons_played_to_db(db):
                     print("Season played by this team already exists in database.")
         print(f"Seasons played by team with ID {t_id} added to database successfully.")
 
+
 def add_fixtures_to_db(db):
+    """Extract fixture data from each season's JSON file and insert it into the Fixtures table, skipping any that already exist."""
     fix_info_2022 = fixture_manipulation.extract_fixture_info_for_db(2022)
     fix_info_2023 = fixture_manipulation.extract_fixture_info_for_db(2023)
     fix_info_2024 = fixture_manipulation.extract_fixture_info_for_db(2024)
@@ -264,10 +319,26 @@ def add_fixtures_to_db(db):
             # query into season table to get s_id for each season
             if not db.query(Season).filter(Season.start_year == fix[1]).first() is None:
                 s_id = (db.query(Season).filter(Season.start_year == fix[1]).first()).id
-                if db.query(Fixture).filter(Fixture.date == fix[2], Fixture.home_team_id == fix[3], Fixture.away_team_id == fix[4]).first() is None:
-                    db_fixture = Fixture(fixture_id=fix[0], season_id=s_id, date=fix[2], home_team_id=fix[3], 
-                                        away_team_id=fix[4], winner_team_id=fix[5], 
-                                        home_goals_scored=fix[6], away_goals_scored=fix[7])
+                if (
+                    db.query(Fixture)
+                    .filter(
+                        Fixture.date == fix[2],
+                        Fixture.home_team_id == fix[3],
+                        Fixture.away_team_id == fix[4],
+                    )
+                    .first()
+                    is None
+                ):
+                    db_fixture = Fixture(
+                        fixture_id=fix[0],
+                        season_id=s_id,
+                        date=fix[2],
+                        home_team_id=fix[3],
+                        away_team_id=fix[4],
+                        winner_team_id=fix[5],
+                        home_goals_scored=fix[6],
+                        away_goals_scored=fix[7],
+                    )
                     db.add(db_fixture)
                     db.commit()
                     db.refresh(db_fixture)
@@ -275,10 +346,12 @@ def add_fixtures_to_db(db):
                     print("Fixture already exists in database.")
         print("Fixtures for season added to database successfully.")
 
+
 def add_h2hs_to_db(db):
+    """For every stored fixture, extract its relevant head-to-head history and insert it into the HeadToHead table, skipping any that already exist."""
     # get list of all fixtures from fixture table
     fixtures = db.query(Fixture).all()
-    
+
     for fixture in fixtures:
         current_f_id = fixture.fixture_id
         # calculate which season the fixture belongs to
@@ -291,15 +364,32 @@ def add_h2hs_to_db(db):
             start_year = dy
             end_year = dy + 1
 
-        h2h_info = fixture_manipulation.extract_h2h_info_for_db(start_year, end_year, fixture.home_team_id, 
-                                                                fixture.away_team_id, fixture.date)
+        h2h_info = fixture_manipulation.extract_h2h_info_for_db(
+            start_year,
+            end_year,
+            fixture.home_team_id,
+            fixture.away_team_id,
+            fixture.date,
+        )
 
         # input data into h2h table
         for h2h in h2h_info:
-            if db.query(HeadToHead).filter(HeadToHead.past_fixture_date == h2h[0]).first() is None:
-                db_h2h = HeadToHead(current_fixture_id=current_f_id, past_fixture_date=h2h[0], 
-                                    team1_id=h2h[1], team2_id=h2h[2], season_id=h2h[3], winner_team_id=h2h[4], 
-                                    team1_goals_scored=h2h[5], team2_goals_scored=h2h[6])
+            if (
+                db.query(HeadToHead)
+                .filter(HeadToHead.past_fixture_date == h2h[0])
+                .first()
+                is None
+            ):
+                db_h2h = HeadToHead(
+                    current_fixture_id=current_f_id,
+                    past_fixture_date=h2h[0],
+                    team1_id=h2h[1],
+                    team2_id=h2h[2],
+                    season_id=h2h[3],
+                    winner_team_id=h2h[4],
+                    team1_goals_scored=h2h[5],
+                    team2_goals_scored=h2h[6],
+                )
                 db.add(db_h2h)
                 db.commit()
                 db.refresh(db_h2h)
@@ -307,18 +397,40 @@ def add_h2hs_to_db(db):
                 print("H2H for this matchup already exists in database.")
         print("H2Hs added to database successfully.")
 
+
 # add predictions to db as they are generated by the model
 def add_predictions_to_db(db, predictions):
+    """Insert each generated prediction (with its feature values) into the Predictions table, skipping any that already exist."""
     for pred in predictions:
-        if db.query(Prediction).filter(Prediction.fixture_id == pred[0]).first() is None:
-            db_pred = db_pred = Prediction(fixture_id=pred[0], predicted_result=pred[21], home_form=pred[1], away_form=pred[2],
-                                           home_h2h_score=pred[3], away_h2h_score=pred[4], t1_home_form_gs=pred[5],
-                                           t1_home_form_gc=pred[6], t1_away_form_gs=pred[7], t1_away_form_gc=pred[8], 
-                                           t2_home_form_gs=pred[9], t2_home_form_gc=pred[10], t2_away_form_gs=pred[11],
-                                           t2_away_form_gc=pred[12], t1_home_h2h_gs=pred[13], t1_home_h2h_gc=pred[14],
-                                           t1_away_h2h_gs=pred[15], t1_away_h2h_gc=pred[16], t2_home_h2h_gs=pred[17],
-                                           t2_home_h2h_gc=pred[18], t2_away_h2h_gs=pred[19], t2_away_h2h_gc=pred[20],
-                                           llm_explanation=None)
+        if (
+            db.query(Prediction).filter(Prediction.fixture_id == pred[0]).first()
+            is None
+        ):
+            db_pred = Prediction(
+                fixture_id=pred[0],
+                predicted_result=pred[21],
+                home_form=pred[1],
+                away_form=pred[2],
+                home_h2h_score=pred[3],
+                away_h2h_score=pred[4],
+                t1_home_form_gs=pred[5],
+                t1_home_form_gc=pred[6],
+                t1_away_form_gs=pred[7],
+                t1_away_form_gc=pred[8],
+                t2_home_form_gs=pred[9],
+                t2_home_form_gc=pred[10],
+                t2_away_form_gs=pred[11],
+                t2_away_form_gc=pred[12],
+                t1_home_h2h_gs=pred[13],
+                t1_home_h2h_gc=pred[14],
+                t1_away_h2h_gs=pred[15],
+                t1_away_h2h_gc=pred[16],
+                t2_home_h2h_gs=pred[17],
+                t2_home_h2h_gc=pred[18],
+                t2_away_h2h_gs=pred[19],
+                t2_away_h2h_gc=pred[20],
+                llm_explanation=None,
+            )
             db.add(db_pred)
             db.commit()
             db.refresh(db_pred)
@@ -326,8 +438,12 @@ def add_predictions_to_db(db, predictions):
             print("Prediction for this fixture already exists in database.")
     print("Predictions added to database successfully.")
 
+
 def insert_llm_explanation(db, fixture_id, explanation):
-    prediction = db.query(Prediction).filter(Prediction.fixture_id == fixture_id).first()
+    """Save a generated LLM explanation onto an existing prediction row for the given fixture."""
+    prediction = (
+        db.query(Prediction).filter(Prediction.fixture_id == fixture_id).first()
+    )
     if prediction:
         prediction.llm_explanation = explanation
         db.commit()
@@ -336,21 +452,35 @@ def insert_llm_explanation(db, fixture_id, explanation):
     else:
         print(f"No prediction found for fixture {fixture_id}.")
 
-# QUERIES    
+
+# QUERIES
 # for use in calculating recent form score
 def get_last_5_fixtures(db, tid, fdate):
-    fixtures = db.query(Fixture).filter(Fixture.date < fdate, 
-                                        sqlalchemy.or_(Fixture.home_team_id == tid, 
-                                        Fixture.away_team_id == tid)
-                                        ).order_by(Fixture.date).all()
+    """Return a team's 5 most recent fixtures (home or away) before a given date."""
+    fixtures = (
+        db.query(Fixture)
+        .filter(
+            Fixture.date < fdate,
+            sqlalchemy.or_(Fixture.home_team_id == tid, Fixture.away_team_id == tid),
+        )
+        .order_by(Fixture.date)
+        .all()
+    )
     fixtures = fixtures[-5:]
     return fixtures
 
+
 # for use in calculating h2h score
 def get_last_5_h2hs(db, t1id, t2id, fdate):
-    h2hs = db.query(HeadToHead).filter(HeadToHead.past_fixture_date < fdate, 
-                                       sqlalchemy.and_(HeadToHead.team1_id == t1id, 
-                                                       HeadToHead.team2_id == t2id)
-                                                       ).order_by(HeadToHead.past_fixture_date).all()
+    """Return the 5 most recent head-to-head meetings between two teams before a given date."""
+    h2hs = (
+        db.query(HeadToHead)
+        .filter(
+            HeadToHead.past_fixture_date < fdate,
+            sqlalchemy.and_(HeadToHead.team1_id == t1id, HeadToHead.team2_id == t2id),
+        )
+        .order_by(HeadToHead.past_fixture_date)
+        .all()
+    )
     h2hs = h2hs[-5:]
     return h2hs

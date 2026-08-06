@@ -1,35 +1,31 @@
 teams = {
-    33: "Manchester United", 
-    34: "Newcastle", 
-    35: "Bournemouth", 
-    36: "Fulham", 
-    39: "Wolves", 
-    40: "Liverpool", 
-    41: "Southampton", 
-    42: "Arsenal", 
-    44: "Burnley", 
-    45: "Everton", 
-    46: "Leicester", 
-    47: "Tottenham", 
-    48: "West Ham", 
-    49: "Chelsea", 
-    50: "Manchester City", 
-    51: "Brighton", 
-    52: "Crystal Palace", 
-    55: "Brentford", 
-    57: "Ipswich", 
-    62: "Sheffield Utd", 
-    63: "Leeds", 
-    65: "Nottingham Forest", 
-    66: "Aston Villa", 
-    1359: "Luton", 
+    33: "Manchester United",
+    34: "Newcastle",
+    35: "Bournemouth",
+    36: "Fulham",
+    39: "Wolves",
+    40: "Liverpool",
+    41: "Southampton",
+    42: "Arsenal",
+    44: "Burnley",
+    45: "Everton",
+    46: "Leicester",
+    47: "Tottenham",
+    48: "West Ham",
+    49: "Chelsea",
+    50: "Manchester City",
+    51: "Brighton",
+    52: "Crystal Palace",
+    55: "Brentford",
+    57: "Ipswich",
+    62: "Sheffield Utd",
+    63: "Leeds",
+    65: "Nottingham Forest",
+    66: "Aston Villa",
+    1359: "Luton",
 }
 
-seasons = {
-    1: [2022, 2023],
-    2: [2023, 2024],
-    3: [2024, 2025]
-}
+seasons = {1: [2022, 2023], 2: [2023, 2024], 3: [2024, 2025]}
 
 seasons_played = {
     33: [2022, 2023, 2024],
@@ -55,5 +51,5 @@ seasons_played = {
     63: [2022],
     65: [2022, 2023, 2024],
     66: [2022, 2023, 2024],
-    1359: [2023]
+    1359: [2023],
 }

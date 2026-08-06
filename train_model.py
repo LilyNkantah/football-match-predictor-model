@@ -19,24 +19,23 @@ Responsibilities of this file:
 - I will use 2 folds: (Train: 1 / Test: 2), (Train: 1+2 / Test: 3) 
 """
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
-DATABASE_URL = "sqlite:///./football_predictor.db"  # SQLite database URL for local development
+DATABASE_URL = (
+    "sqlite:///./football_predictor.db"  # SQLite database URL for local development
+)
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = sqlalchemy.orm.declarative_base()
 
+
 def build_model(preds, X_train, y_train, X_test, y_test):
+    """Train a Random Forest on one TSCV fold, evaluate it, and append its test-set predictions (with fixture data) to preds."""
     # use the split data to train Random Forest model
     rf_classifier = RandomForestClassifier(n_estimators=99, random_state=None)
     rf_classifier.fit(X_train, y_train)
 
     X_pred_test = [row[2:] for row in X_test]  # extract features for testing
-
-    for i, row in enumerate(X_train):
-        for j, value in enumerate(row):
-            if isinstance(value, (list, tuple)):
-                print(i, j, value)
 
     # predict on test data
     y_pred = rf_classifier.predict(X_pred_test)
@@ -44,16 +43,19 @@ def build_model(preds, X_train, y_train, X_test, y_test):
     # add predictions to the database
     for test_row, fix, pred in zip(X_test, X_pred_test, y_pred):
         fixture_id = test_row[0]
-        preds.append((fixture_id, *fix, pred.item()))  # append fixture_id, features, and prediction for each fixture
+        preds.append(
+            (fixture_id, *fix, pred.item())
+        )  # append fixture_id, features, and prediction for each fixture
 
     # check accuracy of prediction
     accuracy = accuracy_score(y_test, y_pred)
     classification_rep = classification_report(y_test, y_pred)
 
-    print(f"Accuracy: {accuracy:.2f}") 
+    print(f"Accuracy: {accuracy:.2f}")
     print("\nClassification Report:\n", classification_rep)
 
     return y_pred
+
 
 if __name__ == "__main__":
     db = SessionLocal()
@@ -88,7 +90,7 @@ if __name__ == "__main__":
     # Testing (season 3)
     X3_test = [row[:-1] for row in feature_rows if row[1] == 3]
     y3 = [row[-1] for row in feature_rows if row[1] == 3]
-    
+
     fold1_pred = build_model(predictions, X1_train, y1, X2_test, y2)
     fold2_pred = build_model(predictions, X1_2_train, y1_2, X3_test, y3)
 
