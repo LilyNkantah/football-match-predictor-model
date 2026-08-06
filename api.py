@@ -1,4 +1,5 @@
-from database import Fixture, FixtureResponse, Team, Prediction, PredictionResponse
+from llm_explanation import explain_prediction
+from database import Fixture, Team, Prediction, PredictionResponse, insert_llm_explanation
 
 from pydantic import BaseModel
 
@@ -47,6 +48,17 @@ class FixtureListItem(BaseModel):
     predicted_result: int | None = None
     season_fixture_count: int | None = None
 
+class ExplainResponse(BaseModel):
+    fixture_id: int
+    predicted_result: int | None = None
+    home_form: float | None = None
+    away_form: float | None = None
+    home_team_name: str | None = None
+    away_team_name: str | None = None
+    home_h2h_score: float | None = None
+    away_h2h_score: float | None = None
+    llm_explanation: str | None = None
+
 # Define API endpoint to get fixtures for a specific season and page number
 @app.get("/fixtures/", response_model=List[FixtureListItem])
 async def get_fixtures(season_id: int, page_number: int, db: Session = Depends(get_db)):
@@ -77,39 +89,39 @@ async def get_fixtures(season_id: int, page_number: int, db: Session = Depends(g
     return fixture_data
 
 # Define API endpoint to get fixture stat details for llm explanation
-@app.get("/explain/{fixture_id}", response_model=PredictionResponse)
+@app.get("/explain/{fixture_id}", response_model=ExplainResponse)
 async def explain(fixture_id: int, db: Session = Depends(get_db)):
-    # check if fixture exists
+    # check if the fixture exists
     fixture = db.query(Fixture).filter(Fixture.fixture_id == fixture_id).first()
     if not fixture:
         raise HTTPException(status_code=404, detail="Fixture not found")
-    # check if prediction exists for the fixture
+    # check if the prediction exists
     prediction = db.query(Prediction).filter(Prediction.fixture_id == fixture_id).first()
     if not prediction:
         raise HTTPException(status_code=404, detail="Prediction not found")
 
+    home_team = db.query(Team).filter(Team.team_id == fixture.home_team_id).first()
+    away_team = db.query(Team).filter(Team.team_id == fixture.away_team_id).first()
+
+    home_team_name = home_team.team_name if home_team else None
+    away_team_name = away_team.team_name if away_team else None
+    # get existing llm explanation or generate a new one if it doesn't exist
+    if prediction.llm_explanation is None:
+        generated = explain_prediction(prediction, home_team_name, away_team_name)
+        insert_llm_explanation(db, fixture_id, generated)
+        prediction.llm_explanation = generated
+
+    # prepare the fixture stats to return
     fixture_stats = {
-        "fixture_id": fixture_id,
+        "fixture_id": fixture.fixture_id,
         "predicted_result": prediction.predicted_result,
+        "home_team_name": home_team_name,
+        "away_team_name": away_team_name,
         "home_form": prediction.home_form,
         "away_form": prediction.away_form,
         "home_h2h_score": prediction.home_h2h_score,
         "away_h2h_score": prediction.away_h2h_score,
-        "t1_home_form_gs": prediction.t1_home_form_gs,
-        "t1_home_form_gc": prediction.t1_home_form_gc,
-        "t1_away_form_gs": prediction.t1_away_form_gs,
-        "t1_away_form_gc": prediction.t1_away_form_gc,
-        "t2_home_form_gs": prediction.t2_home_form_gs,
-        "t2_home_form_gc": prediction.t2_home_form_gc,
-        "t2_away_form_gs": prediction.t2_away_form_gs,
-        "t2_away_form_gc": prediction.t2_away_form_gc,
-        "t1_home_h2h_gs": prediction.t1_home_h2h_gs,
-        "t1_away_h2h_gc": prediction.t1_away_h2h_gc,
-        "t2_home_h2h_gs": prediction.t2_home_h2h_gs,
-        "t2_home_h2h_gc": prediction.t2_home_h2h_gc,
-        "t2_away_h2h_gs": prediction.t2_away_h2h_gs,
-        "t2_away_h2h_gc": prediction.t2_away_h2h_gc,
-        "llm_explanation": prediction.llm_explanation if prediction.llm_explanation else None
+        "llm_explanation": prediction.llm_explanation
     }
 
     return fixture_stats

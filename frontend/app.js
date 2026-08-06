@@ -261,7 +261,7 @@ function renderFixtures(fixtureList) {
           </span>
         </td>
         <td class="text-end">
-          <button class="btn btn-sm btn-outline-secondary explain-btn" data-fixture-id="${fixture.fixtureId}">
+          <button class="btn btn-sm btn-outline-secondary explain-btn" data-fixture-id="${fixture.fixture_id}">
             Explain
           </button>
         </td>
@@ -333,19 +333,30 @@ document.getElementById("fixture-table-body").addEventListener("click", function
   }
 });
 
-// Placeholder for the explanation function
-// function showExplanation(fixtureId) {}
+// Fetches explanation data for a fixture and displays it in the explanation panel
+async function showExplanation(fixtureId) {
+  const response = await fetch(`http://localhost:8000/explain/${fixtureId}`);
+  const data = await response.json();
+  console.log("Explanation data:", data);
 
+  const panel = document.getElementById("explain-panel");
+  const content = document.getElementById("explain-content");
+
+  content.innerHTML = `
+    <p><strong>Home team recent form:</strong> ${formatScore(data.home_form)} | <strong>Away team recent form:</strong> ${formatScore(data.away_form)}</p>
+    <p><strong>Home team H2H form:</strong> ${formatScore(data.home_h2h_score)} | <strong>Away team H2H form:</strong> ${formatScore(data.away_h2h_score)}</p>
+    <hr>
+    <p>${data.llm_explanation}</p>
+  `;
+
+  panel.classList.remove("d-none");
+}
+
+function formatScore(score) {
+  return score === null ? "N/A" : `${Math.round(score * 15)}/15`;
+}
 
 // Call the function once DOMContentLoaded (page is fully loaded)
 document.addEventListener("DOMContentLoaded", function () {
   goToPage(1, currentSeasonId); // render first page of fixtures
 });
-
-/*
-const predictions = [
-        { fixture_id: 1208113, predicted_result: 2, home_form: '2022-08-05 19:00:00.000000', away_form: 52, home_h2h_score: 42, away_h2h_score: 42, t1_home_form_gs: 0, t1_away_form_gs: 2, t1_away_form_gc: 1, t2_home_form_gs: 0, t2_home_form_gc: 1, t2_away_form_gs: 2, t2_away_form_gc: 1, t1_home_h2h_gs: 42, t1_home_h2h_gc: 42, t1_away_h2h_gs: 42, t1_away_h2h_gc: 42, t2_home_h2h_gs: 42, t2_home_h2h_gc: 42, t2_away_h2h_gs: 42, t2_away_h2h_gc: 3, llm_explanation: null },
-        { fixture_id: 1208114, predicted_result: 1, home_form: '2022-08-06 11:30:00.000000', away_form: 36, home_h2h_score: 40, away_h2h_score: 40, t1_home_form_gs: 2, t1_away_form_gs: 2, t1_away_form_gc: 2, t2_home_form_gs: 0, t2_home_form_gc: 2, t2_away_form_gs: 2, t2_away_form_gc: 2, t1_home_h2h_gs: 40, t1_home_h2h_gc: 3, t1_away_h2h_gs: 40, t1_away_h2h_gc: 40, t2_home_h2h_gs: 40, t2_home_h2h_gc: 40, t2_away_h2h_gs: 40, t2_away_h2h_gc: 40, llm_explanation: null },
-        { fixture_id: 1208115, predicted_result: 0, home_form: '2022-08-06 14:00:00.000000', away_form: 35, home_h2h_score: 66, away_h2h_score: 66, t1_home_form_gs: 2, t1_away_form_gs: 0, t1_away_form_gc: 1, t2_home_form_gs: 0, t2_home_form_gc: 1, t2_away_form_gs: 0, t2_away_form_gc: 1, t1_home_h2h_gs: 66, t1_home_h2h_gc: 66, t1_away_h2h_gs: 66, t1_away_h2h_gc: 66, t2_home_h2h_gs: 66, t2_home_h2h_gc: 66, t2_away_h2h_gs: 66, t2_away_h2h_gc: 66, llm_explanation: null },
-    ];
-*/
