@@ -250,6 +250,10 @@ function renderFixtures(fixtureList) {
       fixture.predicted_result = "Away win";
     }
 
+    const actionCell = fixture.predicted_result === null
+      ? `<td class="text-end">N/A</td>`
+      : `<td class="text-end"><button class="btn btn-sm btn-outline-secondary explain-btn" data-fixture-id="${fixture.fixture_id}">Explain</button></td>`;
+
     const rowHtml = `
       <tr>
         <td>${fixture.home_team_name} vs ${fixture.away_team_name}</td>
@@ -260,11 +264,7 @@ function renderFixtures(fixtureList) {
             ${isNull ? "Training Data" : isCorrect ? "Correct" : "Incorrect"}
           </span>
         </td>
-        <td class="text-end">
-          <button class="btn btn-sm btn-outline-secondary explain-btn" data-fixture-id="${fixture.fixture_id}">
-            Explain
-          </button>
-        </td>
+        ${actionCell}
       </tr>
     `;
 
