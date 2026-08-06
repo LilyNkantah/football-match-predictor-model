@@ -1,5 +1,3 @@
-fastapi
-uvicorn
 sqlalchemy
 pydantic
 os
@@ -8,3 +6,7 @@ json
 datetime
 numpy
 python-dotenv
+sklearn
+warnings
+typing
+anthropic
